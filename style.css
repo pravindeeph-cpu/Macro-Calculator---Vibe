@@ -239,6 +239,16 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .bar-fill { height: 100%; border-radius: 999px; transition: width 0.3s ease; }
 .macro-row .macro-note { font-size: 0.72rem; color: var(--muted); }
 
+.storage-banner {
+  background: var(--panel-2);
+  border-left: 4px solid var(--carbs);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
 .log-empty { color: var(--muted); font-size: 0.9rem; padding: 14px 0; }
 
 .meal-group { margin-bottom: 18px; }

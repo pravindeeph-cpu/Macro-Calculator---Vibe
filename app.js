@@ -62,10 +62,35 @@
   }
 
   // ---------- Storage helpers ----------
-  function loadAllLogs() {
-    try { return JSON.parse(localStorage.getItem(LOGS_KEY)) || {}; } catch (e) { return {}; }
+  // Some browser contexts (private/incognito mode, certain restricted local-file
+  // views) throw on localStorage writes even though reads succeed. Detect that
+  // once at startup and fall back to an in-memory store so the app keeps working
+  // for the session instead of silently failing every "Add to log".
+  function createStorage() {
+    try {
+      const probeKey = "__macrocalc_probe__";
+      localStorage.setItem(probeKey, "1");
+      localStorage.removeItem(probeKey);
+      return {
+        persistent: true,
+        get: (k) => localStorage.getItem(k),
+        set: (k, v) => localStorage.setItem(k, v),
+      };
+    } catch (e) {
+      const mem = {};
+      return {
+        persistent: false,
+        get: (k) => (k in mem ? mem[k] : null),
+        set: (k, v) => { mem[k] = v; },
+      };
+    }
   }
-  function saveAllLogs(all) { localStorage.setItem(LOGS_KEY, JSON.stringify(all)); }
+  const storage = createStorage();
+
+  function loadAllLogs() {
+    try { return JSON.parse(storage.get(LOGS_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveAllLogs(all) { storage.set(LOGS_KEY, JSON.stringify(all)); }
   function getLogForDate(dateStr) { return loadAllLogs()[dateStr] || []; }
   function setLogForDate(dateStr, items) {
     const all = loadAllLogs();
@@ -75,22 +100,22 @@
 
   function loadGoals() {
     try {
-      const g = JSON.parse(localStorage.getItem(GOALS_KEY));
+      const g = JSON.parse(storage.get(GOALS_KEY));
       return g ? { ...DEFAULT_GOALS, ...g } : { ...DEFAULT_GOALS };
     } catch (e) { return { ...DEFAULT_GOALS }; }
   }
-  function saveGoals(goals) { localStorage.setItem(GOALS_KEY, JSON.stringify(goals)); }
+  function saveGoals(goals) { storage.set(GOALS_KEY, JSON.stringify(goals)); }
 
   function loadCustomFoods() {
-    try { return JSON.parse(localStorage.getItem(CUSTOM_FOODS_KEY)) || []; } catch (e) { return []; }
+    try { return JSON.parse(storage.get(CUSTOM_FOODS_KEY)) || []; } catch (e) { return []; }
   }
-  function saveCustomFoods(foods) { localStorage.setItem(CUSTOM_FOODS_KEY, JSON.stringify(foods)); }
+  function saveCustomFoods(foods) { storage.set(CUSTOM_FOODS_KEY, JSON.stringify(foods)); }
   function allFoods() { return [...FOOD_DB, ...loadCustomFoods()]; }
 
   function loadProfile() {
-    try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || null; } catch (e) { return null; }
+    try { return JSON.parse(storage.get(PROFILE_KEY)) || null; } catch (e) { return null; }
   }
-  function saveProfile(profile) { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+  function saveProfile(profile) { storage.set(PROFILE_KEY, JSON.stringify(profile)); }
 
   // ---------- DOM refs ----------
   const dateInput = document.getElementById("dateInput");
@@ -746,5 +771,9 @@
   }
 
   // ---------- Init ----------
+  if (!storage.persistent) {
+    const storageBanner = document.getElementById("storageBanner");
+    if (storageBanner) storageBanner.classList.remove("hidden");
+  }
   render();
 })();
