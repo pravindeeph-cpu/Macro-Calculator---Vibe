@@ -28,6 +28,7 @@ const FOOD_DB = [
   { name: "Pasta, cooked", category: "Grain", cals: 131, protein: 5, carbs: 25, fat: 1.1 },
   { name: "Bread, white", category: "Grain", cals: 265, protein: 9, carbs: 49, fat: 3.2, servings: [{ label: "1 slice (30g)", grams: 30 }] },
   { name: "Bread, whole wheat", category: "Grain", cals: 247, protein: 13, carbs: 41, fat: 3.4, servings: [{ label: "1 slice (32g)", grams: 32 }] },
+  { name: "Gardenia Buns", category: "Grain", cals: 290, protein: 8, carbs: 50, fat: 6, servings: [{ label: "1 bun (45g)", grams: 45 }] },
   { name: "Potato, baked", category: "Vegetable", cals: 93, protein: 2.5, carbs: 21, fat: 0.1, servings: [{ label: "1 medium potato (170g)", grams: 170 }] },
   { name: "Sweet potato, baked", category: "Vegetable", cals: 90, protein: 2, carbs: 21, fat: 0.1, servings: [{ label: "1 medium (130g)", grams: 130 }] },
   { name: "Tortilla, flour", category: "Grain", cals: 312, protein: 8.2, carbs: 51, fat: 8, servings: [{ label: "1 tortilla (45g)", grams: 45 }] },
@@ -110,6 +111,15 @@ const FOOD_DB = [
   },
   { name: "Black coffee", category: "Drink", cals: 1, protein: 0.1, carbs: 0, fat: 0, servings: [{ label: "1 cup (240ml)", grams: 240 }] },
   { name: "Coffee with milk & sugar", category: "Drink", cals: 30, protein: 1, carbs: 4, fat: 1, servings: [{ label: "1 cup (240ml)", grams: 240 }] },
+  { name: "Coffee with milk, no sugar", category: "Drink", cals: 18, protein: 1, carbs: 1.8, fat: 1, servings: [{ label: "1 cup (240ml)", grams: 240 }] },
+  {
+    name: "Latte (milk, no sugar)", category: "Drink", cals: 45, protein: 2.5, carbs: 3.8, fat: 2.5,
+    servings: [
+      { label: "Small (240ml)", grams: 240 },
+      { label: "Medium (350ml)", grams: 350 },
+      { label: "Large (470ml)", grams: 470 },
+    ],
+  },
   { name: "Protein shake (milk-based)", category: "Drink", cals: 90, protein: 8, carbs: 8, fat: 3, servings: [{ label: "1 shaker (400ml)", grams: 400 }] },
   {
     name: "Sports drink (Gatorade-type)", category: "Drink", cals: 25, protein: 0, carbs: 6, fat: 0,

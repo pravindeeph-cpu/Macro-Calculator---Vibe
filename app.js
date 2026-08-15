@@ -338,7 +338,8 @@
       const preset = selectedFood.servings[parseInt(servingSize.value, 10)];
       const qty = parseFloat(presetQty.value) || 0;
       const grams = preset.grams * qty;
-      const qtyLabel = qty === 1 ? preset.label : `${trimNum(presetQty.value)} × ${preset.label}`;
+      // Avoid a redundant "2 × 1 bun (45g)" when the preset label itself starts with "1 ".
+      const qtyLabel = qty === 1 ? preset.label : `${trimNum(presetQty.value)} × ${preset.label.replace(/^1\s+/, "")}`;
       return { grams, qtyLabel };
     }
     return { grams: amountInGrams(), qtyLabel: `${trimNum(qtyAmount.value)} ${qtyUnit.value}` };
