@@ -1,5 +1,5 @@
 // Built-in food/drink database. Macro values are per 100g (or 100ml for liquids).
-// cals = kcal, protein/carbs/fat = grams
+// cals = kcal, protein/carbs/fat = grams. alcohol = grams of pure alcohol (only set on alcoholic drinks).
 const FOOD_DB = [
   // Proteins
   { name: "Chicken breast, cooked", category: "Protein", cals: 165, protein: 31, carbs: 0, fat: 3.6 },
@@ -71,8 +71,10 @@ const FOOD_DB = [
   { name: "Skim milk", category: "Drink", cals: 34, protein: 3.4, carbs: 5, fat: 0.1 },
   { name: "Orange juice", category: "Drink", cals: 45, protein: 0.7, carbs: 10.4, fat: 0.2 },
   { name: "Soda, cola", category: "Drink", cals: 42, protein: 0, carbs: 10.6, fat: 0 },
-  { name: "Beer, regular", category: "Drink", cals: 43, protein: 0.5, carbs: 3.6, fat: 0 },
-  { name: "Wine, red", category: "Drink", cals: 85, protein: 0.1, carbs: 2.6, fat: 0 },
+  { name: "Beer, regular", category: "Drink", cals: 43, protein: 0.5, carbs: 3.6, fat: 0, alcohol: 3.9 },
+  { name: "Wine, red", category: "Drink", cals: 85, protein: 0.1, carbs: 2.6, fat: 0, alcohol: 9.5 },
+  { name: "Wine, white", category: "Drink", cals: 82, protein: 0.1, carbs: 2.6, fat: 0, alcohol: 9.5 },
+  { name: "Spirits, 40% ABV (vodka, whiskey, gin...)", category: "Drink", cals: 231, protein: 0, carbs: 0, fat: 0, alcohol: 31.6 },
   { name: "Black coffee", category: "Drink", cals: 1, protein: 0.1, carbs: 0, fat: 0 },
   { name: "Coffee with milk & sugar", category: "Drink", cals: 30, protein: 1, carbs: 4, fat: 1 },
   { name: "Protein shake (milk-based)", category: "Drink", cals: 90, protein: 8, carbs: 8, fat: 3 },

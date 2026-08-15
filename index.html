@@ -10,14 +10,20 @@
 <div class="app">
 
   <header class="topbar">
-    <h1>Macro Calculator</h1>
+    <div class="brand">
+      <h1>Macro Calculator</h1>
+      <span class="tag">track what you eat and drink</span>
+    </div>
     <div class="date-nav">
       <button id="prevDay" class="icon-btn" aria-label="Previous day">&larr;</button>
       <input type="date" id="dateInput">
       <button id="nextDay" class="icon-btn" aria-label="Next day">&rarr;</button>
       <button id="todayBtn" class="btn-ghost">Today</button>
     </div>
-    <button id="goalsBtn" class="btn-ghost">Goals</button>
+    <div class="topbar-actions">
+      <button id="profileBtn" class="btn-ghost">Profile</button>
+      <button id="goalsBtn" class="btn-ghost">Goals</button>
+    </div>
   </header>
 
   <main class="layout">
@@ -36,7 +42,6 @@
           <input type="text" id="foodSearch" placeholder="Start typing e.g. chicken, banana, milk..." autocomplete="off">
           <ul id="suggestions" class="suggestions hidden"></ul>
         </div>
-        <input type="hidden" id="selectedFood">
 
         <div class="row">
           <div class="field">
@@ -93,8 +98,11 @@
             <input type="number" id="customFat" min="0" step="any" value="0">
           </div>
         </div>
-
         <div class="row">
+          <div class="field">
+            <label for="customAlcohol">Alcohol (standard drinks)</label>
+            <input type="number" id="customAlcohol" min="0" step="any" value="0">
+          </div>
           <div class="field">
             <label for="mealSelectCustom">Meal</label>
             <select id="mealSelectCustom">
@@ -104,9 +112,10 @@
               <option selected>Snack</option>
             </select>
           </div>
-          <div class="field checkbox-field">
-            <label><input type="checkbox" id="saveToDb"> Save to database for reuse</label>
-          </div>
+        </div>
+
+        <div class="field checkbox-field">
+          <label><input type="checkbox" id="saveToDb"> Save to database for reuse</label>
         </div>
 
         <button type="submit" class="btn-primary">Add to log</button>
@@ -115,7 +124,18 @@
 
     <section class="panel summary-panel">
       <h2>Today's totals</h2>
-      <div class="totals-grid" id="totalsGrid"></div>
+      <div class="summary-body">
+        <div class="ring-wrap">
+          <div class="ring" id="calRing">
+            <div class="ring-label">
+              <span class="num" id="ringNum">0</span>
+              <span class="unit">kcal</span>
+              <div class="of" id="ringOf">of 0</div>
+            </div>
+          </div>
+        </div>
+        <div class="macro-bars" id="macroBars"></div>
+      </div>
     </section>
 
     <section class="panel log-panel">
@@ -124,11 +144,29 @@
     </section>
 
   </main>
+
+  <main class="layout2">
+    <section class="panel notes-panel">
+      <h2>Nutritionist's notes</h2>
+      <div id="notesContent"></div>
+    </section>
+
+    <section class="panel tips-panel">
+      <h2>Health &amp; activity tips</h2>
+      <div id="tipsContent"></div>
+      <p class="disclaimer">General wellness information only, not medical, nutrition, or fitness advice tailored to you. Check with a doctor or registered dietitian before making significant changes, especially around alcohol use or existing health conditions.</p>
+    </section>
+  </main>
+
 </div>
 
 <div id="goalsModal" class="modal hidden">
   <div class="modal-card">
     <h2>Daily goals</h2>
+    <div class="suggest-row">
+      <button type="button" id="suggestGoalsBtn" class="btn-ghost">Suggest from my profile</button>
+    </div>
+    <p class="modal-hint" id="suggestHint"></p>
     <form id="goalsForm">
       <div class="field">
         <label for="goalCals">Calories</label>
@@ -151,6 +189,77 @@
       <div class="modal-actions">
         <button type="button" id="closeGoals" class="btn-ghost">Cancel</button>
         <button type="submit" class="btn-primary">Save goals</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="profileModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Your health profile</h2>
+    <p class="modal-hint">Used locally to estimate your energy needs and tailor guidance. Nothing leaves your browser.</p>
+    <form id="profileForm">
+      <div class="row">
+        <div class="field">
+          <label for="profileSex">Sex</label>
+          <select id="profileSex">
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="unspecified">Prefer not to say</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="profileAge">Age (years)</label>
+          <input type="number" id="profileAge" min="0" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="profileHeight">Height</label>
+          <input type="number" id="profileHeight" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="profileHeightUnit">Unit</label>
+          <select id="profileHeightUnit">
+            <option value="cm">cm</option>
+            <option value="in">inches</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="profileWeight">Weight</label>
+          <input type="number" id="profileWeight" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="profileWeightUnit">Unit</label>
+          <select id="profileWeightUnit">
+            <option value="kg">kg</option>
+            <option value="lb">lb</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="profileActivity">Activity level</label>
+        <select id="profileActivity">
+          <option value="sedentary">Sedentary (little to no exercise)</option>
+          <option value="light">Light (exercise 1–3 days/week)</option>
+          <option value="moderate">Moderate (exercise 3–5 days/week)</option>
+          <option value="active">Active (exercise 6–7 days/week)</option>
+          <option value="very_active">Very active (hard training or physical job)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="profileGoal">Goal</label>
+        <select id="profileGoal">
+          <option value="lose">Lose weight</option>
+          <option value="maintain">Maintain weight</option>
+          <option value="gain">Gain weight</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="closeProfile" class="btn-ghost">Cancel</button>
+        <button type="submit" class="btn-primary">Save profile</button>
       </div>
     </form>
   </div>
