@@ -10,6 +10,7 @@
   const GOALS_KEY = "macrocalc_goals";
   const CUSTOM_FOODS_KEY = "macrocalc_custom_foods";
   const PROFILE_KEY = "macrocalc_profile";
+  const RECIPES_KEY = "macrocalc_recipes";
 
   const DEFAULT_GOALS = { cals: 2000, protein: 150, carbs: 200, fat: 65 };
   const MEALS = ["Breakfast", "Lunch", "Dinner", "Snack"];
@@ -49,8 +50,8 @@
   // ---------- State ----------
   let currentDate = todayStr();
   let selectedFood = null; // {name, cals, protein, carbs, fat, alcohol} per 100g/ml
-  let activeSuggestionIndex = -1;
-  let currentSuggestions = [];
+  let selectedIngredientFood = null; // for the recipe builder's ingredient search
+  let recipeIngredients = []; // ingredients accumulated while building a new recipe
 
   // ---------- Date helpers ----------
   function todayStr() { return toDateStr(new Date()); }
@@ -110,7 +111,28 @@
     try { return JSON.parse(storage.get(CUSTOM_FOODS_KEY)) || []; } catch (e) { return []; }
   }
   function saveCustomFoods(foods) { storage.set(CUSTOM_FOODS_KEY, JSON.stringify(foods)); }
-  function allFoods() { return [...FOOD_DB, ...loadCustomFoods()]; }
+
+  function loadRecipes() {
+    try { return JSON.parse(storage.get(RECIPES_KEY)) || []; } catch (e) { return []; }
+  }
+  function saveRecipes(recipes) { storage.set(RECIPES_KEY, JSON.stringify(recipes)); }
+
+  // Recipes are stored as a name + per-serving macros. Representing that per-serving
+  // amount as "100g" lets a recipe reuse the exact same preset/quantity scaling engine
+  // as every other food — "grams" here is just an internal unit equal to one serving.
+  function recipesAsFoods() {
+    return loadRecipes().map((r) => ({
+      name: r.name,
+      category: "Recipe",
+      cals: r.perServing.cals,
+      protein: r.perServing.protein,
+      carbs: r.perServing.carbs,
+      fat: r.perServing.fat,
+      servings: [{ label: "1 serving", grams: 100 }],
+    }));
+  }
+
+  function allFoods() { return [...FOOD_DB, ...loadCustomFoods(), ...recipesAsFoods()]; }
 
   function loadProfile() {
     try { return JSON.parse(storage.get(PROFILE_KEY)) || null; } catch (e) { return null; }
@@ -142,6 +164,31 @@
   const importBtn = document.getElementById("importBtn");
   const importFile = document.getElementById("importFile");
   const backupStatus = document.getElementById("backupStatus");
+
+  const discoverBtn = document.getElementById("discoverBtn");
+  const discoverModal = document.getElementById("discoverModal");
+  const closeDiscoverBtn = document.getElementById("closeDiscover");
+  const tabFinderBtn = document.getElementById("tabFinder");
+  const tabRecipesBtn = document.getElementById("tabRecipes");
+  const finderTabPanel = document.getElementById("finderTabPanel");
+  const recipesTabPanel = document.getElementById("recipesTabPanel");
+  const finderRemaining = document.getElementById("finderRemaining");
+  const finderMaxCals = document.getElementById("finderMaxCals");
+  const finderMinProtein = document.getElementById("finderMinProtein");
+  const finderCategory = document.getElementById("finderCategory");
+  const finderResults = document.getElementById("finderResults");
+  const savedRecipesList = document.getElementById("savedRecipesList");
+  const recipeName = document.getElementById("recipeName");
+  const recipeServings = document.getElementById("recipeServings");
+  const recipeIngredientSearch = document.getElementById("recipeIngredientSearch");
+  const recipeIngredientSuggestions = document.getElementById("recipeIngredientSuggestions");
+  const recipeIngredientAmount = document.getElementById("recipeIngredientAmount");
+  const recipeIngredientUnit = document.getElementById("recipeIngredientUnit");
+  const recipeAddIngredientBtn = document.getElementById("recipeAddIngredientBtn");
+  const recipeIngredientList = document.getElementById("recipeIngredientList");
+  const recipeIngredientTotals = document.getElementById("recipeIngredientTotals");
+  const recipeSaveBtn = document.getElementById("recipeSaveBtn");
+  const recipeStatus = document.getElementById("recipeStatus");
 
   const modeSearchBtn = document.getElementById("modeSearch");
   const modeCustomBtn = document.getElementById("modeCustom");
@@ -202,71 +249,86 @@
     searchForm.classList.add("hidden");
   });
 
-  // ---------- Autocomplete ----------
-  foodSearch.addEventListener("input", () => {
-    const q = foodSearch.value.trim().toLowerCase();
+  // ---------- Autocomplete (reusable — powers both the main search and recipe ingredients) ----------
+  function isDrink(food) { return food.category === "Drink"; }
+
+  function createAutocomplete(inputEl, suggestionsEl, wrapperEl, onPick, onInputChange) {
+    let matches = [];
+    let activeIndex = -1;
+
+    function render() {
+      if (!matches.length) { hide(); return; }
+      suggestionsEl.innerHTML = matches.map((f, i) => `
+          <li data-index="${i}">
+            <span>${escapeHtml(f.name)}</span>
+            <span class="sugg-macro">${Math.round(f.cals)} kcal / 100${isDrink(f) ? "ml" : "g"}</span>
+          </li>`).join("");
+      suggestionsEl.classList.remove("hidden");
+      [...suggestionsEl.children].forEach((li) => {
+        li.addEventListener("click", () => pick(matches[Number(li.dataset.index)]));
+      });
+    }
+    function highlight() {
+      [...suggestionsEl.children].forEach((li, i) => li.classList.toggle("active", i === activeIndex));
+    }
+    function hide() {
+      suggestionsEl.classList.add("hidden");
+      suggestionsEl.innerHTML = "";
+      activeIndex = -1;
+    }
+    function pick(food) {
+      hide();
+      onPick(food);
+    }
+
+    inputEl.addEventListener("input", () => {
+      const q = inputEl.value.trim().toLowerCase();
+      if (onInputChange) onInputChange();
+      if (!q) { matches = []; hide(); return; }
+      matches = allFoods()
+        .filter((f) => f.name.toLowerCase().includes(q))
+        .sort((a, b) => {
+          const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
+          const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+          return aStarts - bStarts || a.name.localeCompare(b.name);
+        })
+        .slice(0, 8);
+      activeIndex = -1;
+      render();
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (suggestionsEl.classList.contains("hidden")) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        activeIndex = Math.min(activeIndex + 1, matches.length - 1);
+        highlight();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        activeIndex = Math.max(activeIndex - 1, 0);
+        highlight();
+      } else if (e.key === "Enter") {
+        if (activeIndex >= 0 && matches[activeIndex]) {
+          e.preventDefault();
+          pick(matches[activeIndex]);
+        }
+      } else if (e.key === "Escape") {
+        hide();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!wrapperEl.contains(e.target)) hide();
+    });
+
+    return { hide };
+  }
+
+  createAutocomplete(foodSearch, suggestionsEl, foodSearch.closest(".autocomplete"), pickFood, () => {
     selectedFood = null;
     resetAmountUI();
     updateSearchPreview();
-    if (!q) { hideSuggestions(); return; }
-    const matches = allFoods()
-      .filter((f) => f.name.toLowerCase().includes(q))
-      .sort((a, b) => {
-        const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
-        const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
-        return aStarts - bStarts || a.name.localeCompare(b.name);
-      })
-      .slice(0, 8);
-    currentSuggestions = matches;
-    activeSuggestionIndex = -1;
-    renderSuggestions(matches);
   });
-
-  foodSearch.addEventListener("keydown", (e) => {
-    if (suggestionsEl.classList.contains("hidden")) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, currentSuggestions.length - 1);
-      highlightSuggestion();
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
-      highlightSuggestion();
-    } else if (e.key === "Enter") {
-      if (activeSuggestionIndex >= 0 && currentSuggestions[activeSuggestionIndex]) {
-        e.preventDefault();
-        pickFood(currentSuggestions[activeSuggestionIndex]);
-      }
-    } else if (e.key === "Escape") {
-      hideSuggestions();
-    }
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!e.target.closest(".autocomplete")) hideSuggestions();
-  });
-
-  function renderSuggestions(matches) {
-    if (!matches.length) { hideSuggestions(); return; }
-    suggestionsEl.innerHTML = matches.map((f, i) => `
-        <li data-index="${i}">
-          <span>${escapeHtml(f.name)}</span>
-          <span class="sugg-macro">${Math.round(f.cals)} kcal / 100${isDrink(f) ? "ml" : "g"}</span>
-        </li>`).join("");
-    suggestionsEl.classList.remove("hidden");
-    [...suggestionsEl.children].forEach((li) => {
-      li.addEventListener("click", () => pickFood(matches[Number(li.dataset.index)]));
-    });
-  }
-  function highlightSuggestion() {
-    [...suggestionsEl.children].forEach((li, i) => li.classList.toggle("active", i === activeSuggestionIndex));
-  }
-  function hideSuggestions() {
-    suggestionsEl.classList.add("hidden");
-    suggestionsEl.innerHTML = "";
-    activeSuggestionIndex = -1;
-  }
-  function isDrink(food) { return food.category === "Drink"; }
 
   function resetAmountUI() {
     servingSizeField.classList.add("hidden");
@@ -278,7 +340,6 @@
   function pickFood(food) {
     selectedFood = food;
     foodSearch.value = food.name;
-    hideSuggestions();
     populateServingUI(food);
     updateSearchPreview();
   }
@@ -298,10 +359,14 @@
         opt.textContent = s.label;
         servingSize.appendChild(opt);
       });
-      const customOpt = document.createElement("option");
-      customOpt.value = "custom";
-      customOpt.textContent = "Custom amount";
-      servingSize.appendChild(customOpt);
+      // A recipe's "100g" is really just its one serving — a gram amount for it
+      // isn't meaningful, so skip offering a custom fallback for those.
+      if (food.category !== "Recipe") {
+        const customOpt = document.createElement("option");
+        customOpt.value = "custom";
+        customOpt.textContent = "Custom amount";
+        servingSize.appendChild(customOpt);
+      }
       servingSize.value = "0";
       servingSizeField.classList.remove("hidden");
       presetQtyRow.classList.remove("hidden");
@@ -491,6 +556,7 @@
       goals: loadGoals(),
       profile: loadProfile(),
       customFoods: loadCustomFoods(),
+      recipes: loadRecipes(),
     };
     const json = JSON.stringify(payload, null, 2);
     const filename = `macro-calculator-backup-${todayStr()}.json`;
@@ -538,6 +604,7 @@
         if (payload.goals) saveGoals(payload.goals);
         if ("profile" in payload) saveProfile(payload.profile);
         if (payload.customFoods) saveCustomFoods(payload.customFoods);
+        if (payload.recipes) saveRecipes(payload.recipes);
         render();
         backupStatus.textContent = "Backup restored.";
       } catch (err) {
@@ -546,6 +613,272 @@
     };
     reader.readAsText(file);
   });
+
+  // ---------- Find food & recipes modal ----------
+  function openDiscoverModal() {
+    discoverModal.classList.remove("hidden");
+    switchDiscoverTab("finder");
+    populateFinderCategoryOptions();
+    updateFinderRemaining();
+    computeFinderResults();
+    resetRecipeBuilder();
+    renderSavedRecipes();
+  }
+  function closeDiscoverModal() { discoverModal.classList.add("hidden"); }
+  discoverBtn.addEventListener("click", openDiscoverModal);
+  closeDiscoverBtn.addEventListener("click", closeDiscoverModal);
+  discoverModal.addEventListener("click", (e) => { if (e.target === discoverModal) closeDiscoverModal(); });
+
+  function switchDiscoverTab(tab) {
+    const isFinder = tab === "finder";
+    tabFinderBtn.classList.toggle("active", isFinder);
+    tabRecipesBtn.classList.toggle("active", !isFinder);
+    finderTabPanel.classList.toggle("hidden", !isFinder);
+    recipesTabPanel.classList.toggle("hidden", isFinder);
+  }
+  tabFinderBtn.addEventListener("click", () => switchDiscoverTab("finder"));
+  tabRecipesBtn.addEventListener("click", () => switchDiscoverTab("recipes"));
+
+  // ---------- Find by macros ----------
+  function defaultServing(food) {
+    return food.servings && food.servings.length ? food.servings[0] : { label: "100g", grams: 100 };
+  }
+
+  function updateFinderRemaining() {
+    const goals = loadGoals();
+    const totals = computeTotals(getLogForDate(currentDate));
+    const remainingCals = goals.cals - totals.cals;
+    const remainingProtein = goals.protein - totals.protein;
+    if (remainingCals > 0) {
+      finderRemaining.textContent = `Remaining today: about ${Math.round(remainingCals)} kcal and ${Math.round(Math.max(0, remainingProtein))}g protein. Max calories below is prefilled with that — adjust it anytime.`;
+      finderMaxCals.value = Math.round(remainingCals);
+    } else {
+      finderRemaining.textContent = `You're already at or over your calorie goal today. No limit is set below, but a smaller protein-forward option is still a reasonable choice if you're genuinely hungry.`;
+      finderMaxCals.value = "";
+    }
+  }
+
+  function populateFinderCategoryOptions() {
+    const categories = Array.from(new Set(allFoods().map((f) => f.category))).sort();
+    finderCategory.innerHTML = `<option value="all">All categories</option>` + categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  }
+
+  function computeFinderResults() {
+    const maxCals = parseFloat(finderMaxCals.value);
+    const minProtein = parseFloat(finderMinProtein.value) || 0;
+    const category = finderCategory.value;
+
+    const results = allFoods()
+      .map((food) => {
+        const serving = defaultServing(food);
+        const factor = serving.grams / 100;
+        return {
+          food,
+          label: serving.label,
+          cals: food.cals * factor,
+          protein: food.protein * factor,
+          carbs: food.carbs * factor,
+          fat: food.fat * factor,
+          alcoholG: (food.alcohol || 0) * factor,
+        };
+      })
+      .filter((r) => category === "all" || r.food.category === category)
+      .filter((r) => (Number.isFinite(maxCals) ? r.cals <= maxCals : true))
+      .filter((r) => r.protein >= minProtein)
+      .sort((a, b) => b.protein - a.protein)
+      .slice(0, 25);
+
+    renderFinderResults(results);
+  }
+  // "input" alone covers live typing; adding "change" here too would re-render (and
+  // destroy) the results list on blur — including the exact moment a result's Add
+  // button is clicked, since that click first shifts focus away from these fields.
+  [finderMaxCals, finderMinProtein].forEach((el) => el.addEventListener("input", computeFinderResults));
+  finderCategory.addEventListener("change", computeFinderResults);
+
+  function renderFinderResults(results) {
+    if (!results.length) {
+      finderResults.innerHTML = `<p class="log-empty">Nothing matches — try raising the calorie limit or lowering the protein minimum.</p>`;
+      return;
+    }
+    finderResults.innerHTML = results.map((r, i) => `
+      <div class="log-item">
+        <div class="item-left">
+          <span class="item-name">${escapeHtml(r.food.name)}</span>
+          <span class="item-sub">${escapeHtml(r.label)}</span>
+        </div>
+        <div class="item-right">
+          <span class="item-macros">P ${round1(r.protein)} · C ${round1(r.carbs)} · F ${round1(r.fat)}</span>
+          <span class="item-cals">${Math.round(r.cals)} kcal</span>
+          <button type="button" class="btn-ghost finder-add-btn" data-index="${i}">Add</button>
+        </div>
+      </div>`).join("");
+    finderResults.querySelectorAll(".finder-add-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const r = results[Number(btn.dataset.index)];
+        addLogItem({
+          name: r.food.name,
+          meal: "Snack",
+          qtyLabel: r.label,
+          cals: r.cals,
+          protein: r.protein,
+          carbs: r.carbs,
+          fat: r.fat,
+          alcoholG: r.alcoholG,
+        });
+        btn.textContent = "Added";
+        btn.disabled = true;
+        updateFinderRemaining();
+      });
+    });
+  }
+
+  // ---------- Recipes ----------
+  createAutocomplete(recipeIngredientSearch, recipeIngredientSuggestions, recipeIngredientSearch.closest(".autocomplete"), (food) => {
+    selectedIngredientFood = food;
+    recipeIngredientSearch.value = food.name;
+  }, () => {
+    selectedIngredientFood = null;
+  });
+
+  function ingredientAmountInGrams() {
+    const amt = parseFloat(recipeIngredientAmount.value) || 0;
+    return recipeIngredientUnit.value === "oz" ? amt * OZ_TO_G : amt;
+  }
+
+  recipeAddIngredientBtn.addEventListener("click", () => {
+    if (!selectedIngredientFood) {
+      recipeIngredientSearch.focus();
+      recipeIngredientSearch.style.borderColor = "var(--danger)";
+      setTimeout(() => (recipeIngredientSearch.style.borderColor = ""), 1200);
+      return;
+    }
+    const grams = ingredientAmountInGrams();
+    if (grams <= 0) return;
+    const factor = grams / 100;
+    recipeIngredients.push({
+      name: selectedIngredientFood.name,
+      grams,
+      cals: selectedIngredientFood.cals * factor,
+      protein: selectedIngredientFood.protein * factor,
+      carbs: selectedIngredientFood.carbs * factor,
+      fat: selectedIngredientFood.fat * factor,
+    });
+    recipeIngredientSearch.value = "";
+    selectedIngredientFood = null;
+    recipeIngredientAmount.value = 100;
+    renderRecipeIngredients();
+  });
+
+  function removeRecipeIngredient(index) {
+    recipeIngredients.splice(index, 1);
+    renderRecipeIngredients();
+  }
+
+  function recipeIngredientTotalsValue() {
+    return recipeIngredients.reduce(
+      (acc, ing) => {
+        acc.cals += ing.cals;
+        acc.protein += ing.protein;
+        acc.carbs += ing.carbs;
+        acc.fat += ing.fat;
+        return acc;
+      },
+      { cals: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+  }
+
+  function renderRecipeIngredients() {
+    if (!recipeIngredients.length) {
+      recipeIngredientList.innerHTML = `<p class="log-empty">No ingredients added yet.</p>`;
+    } else {
+      recipeIngredientList.innerHTML = recipeIngredients.map((ing, i) => `
+        <div class="log-item">
+          <div class="item-left">
+            <span class="item-name">${escapeHtml(ing.name)}</span>
+            <span class="item-sub">${Math.round(ing.grams)} g</span>
+          </div>
+          <div class="item-right">
+            <span class="item-cals">${Math.round(ing.cals)} kcal</span>
+            <button type="button" class="delete-btn" data-index="${i}" title="Remove" aria-label="Remove ingredient">&times;</button>
+          </div>
+        </div>`).join("");
+      recipeIngredientList.querySelectorAll(".delete-btn").forEach((btn) => {
+        btn.addEventListener("click", () => removeRecipeIngredient(Number(btn.dataset.index)));
+      });
+    }
+
+    const totals = recipeIngredientTotalsValue();
+    const servings = parseFloat(recipeServings.value) || 1;
+    recipeIngredientTotals.textContent = recipeIngredients.length
+      ? `Total: ${Math.round(totals.cals)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}  —  per serving (÷${trimNum(String(servings))}): ${Math.round(totals.cals / servings)} kcal · P ${round1(totals.protein / servings)} · C ${round1(totals.carbs / servings)} · F ${round1(totals.fat / servings)}`
+      : "";
+  }
+  recipeServings.addEventListener("input", renderRecipeIngredients);
+
+  function resetRecipeBuilder() {
+    recipeName.value = "";
+    recipeServings.value = 1;
+    recipeIngredientSearch.value = "";
+    selectedIngredientFood = null;
+    recipeIngredients = [];
+    recipeStatus.textContent = "";
+    renderRecipeIngredients();
+  }
+
+  recipeSaveBtn.addEventListener("click", () => {
+    const name = recipeName.value.trim();
+    const servings = parseFloat(recipeServings.value) || 0;
+    if (!name || !recipeIngredients.length || servings <= 0) {
+      recipeStatus.textContent = "Give your recipe a name, at least one ingredient, and a valid number of servings.";
+      return;
+    }
+    const totals = recipeIngredientTotalsValue();
+    const recipes = loadRecipes();
+    recipes.push({
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      name,
+      servings,
+      perServing: {
+        cals: totals.cals / servings,
+        protein: totals.protein / servings,
+        carbs: totals.carbs / servings,
+        fat: totals.fat / servings,
+      },
+    });
+    saveRecipes(recipes);
+    resetRecipeBuilder();
+    renderSavedRecipes();
+    recipeStatus.textContent = `Saved "${name}" — search for it under "From database" to log it.`;
+  });
+
+  function deleteRecipe(id) {
+    saveRecipes(loadRecipes().filter((r) => r.id !== id));
+    renderSavedRecipes();
+  }
+
+  function renderSavedRecipes() {
+    const recipes = loadRecipes();
+    if (!recipes.length) {
+      savedRecipesList.innerHTML = `<p class="log-empty">No recipes saved yet — build one below.</p>`;
+      return;
+    }
+    savedRecipesList.innerHTML = recipes.map((r) => `
+      <div class="log-item">
+        <div class="item-left">
+          <span class="item-name">${escapeHtml(r.name)}</span>
+          <span class="item-sub">${trimNum(String(r.servings))} serving${r.servings === 1 ? "" : "s"} · shown per serving</span>
+        </div>
+        <div class="item-right">
+          <span class="item-macros">P ${round1(r.perServing.protein)} · C ${round1(r.perServing.carbs)} · F ${round1(r.perServing.fat)}</span>
+          <span class="item-cals">${Math.round(r.perServing.cals)} kcal</span>
+          <button type="button" class="delete-btn" data-id="${r.id}" title="Delete recipe" aria-label="Delete recipe">&times;</button>
+        </div>
+      </div>`).join("");
+    savedRecipesList.querySelectorAll(".delete-btn").forEach((btn) => {
+      btn.addEventListener("click", () => deleteRecipe(btn.dataset.id));
+    });
+  }
 
   // ---------- Goals modal ----------
   function openGoalsModal() {
@@ -623,12 +956,8 @@
   }
 
   // ---------- Rendering ----------
-  function render() {
-    const items = getLogForDate(currentDate);
-    const goals = loadGoals();
-    const profile = loadProfile();
-
-    const totals = items.reduce(
+  function computeTotals(items) {
+    return items.reduce(
       (acc, i) => {
         acc.cals += i.cals;
         acc.protein += i.protein;
@@ -639,6 +968,13 @@
       },
       { cals: 0, protein: 0, carbs: 0, fat: 0, alcohol: 0 }
     );
+  }
+
+  function render() {
+    const items = getLogForDate(currentDate);
+    const goals = loadGoals();
+    const profile = loadProfile();
+    const totals = computeTotals(items);
 
     renderRing(totals, goals);
     renderMacroBars(totals, goals, profile);

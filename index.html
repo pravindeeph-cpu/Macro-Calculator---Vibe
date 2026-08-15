@@ -21,6 +21,7 @@
       <button id="todayBtn" class="btn-ghost">Today</button>
     </div>
     <div class="topbar-actions">
+      <button id="discoverBtn" class="btn-ghost">Find Food</button>
       <button id="backupBtn" class="btn-ghost">Backup</button>
       <button id="profileBtn" class="btn-ghost">Profile</button>
       <button id="goalsBtn" class="btn-ghost">Goals</button>
@@ -279,6 +280,80 @@
         <button type="submit" class="btn-primary">Save profile</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div id="discoverModal" class="modal hidden">
+  <div class="modal-card modal-card-wide">
+    <h2>Find food &amp; recipes</h2>
+    <div class="mode-toggle">
+      <button id="tabFinder" class="mode-btn active" type="button">Find by macros</button>
+      <button id="tabRecipes" class="mode-btn" type="button">My recipes</button>
+    </div>
+
+    <div id="finderTabPanel">
+      <p class="modal-hint" id="finderRemaining"></p>
+      <div class="row">
+        <div class="field">
+          <label for="finderMaxCals">Max calories</label>
+          <input type="number" id="finderMaxCals" min="0" step="any" placeholder="No limit">
+        </div>
+        <div class="field">
+          <label for="finderMinProtein">Min protein (g)</label>
+          <input type="number" id="finderMinProtein" min="0" step="any" value="0">
+        </div>
+      </div>
+      <div class="field">
+        <label for="finderCategory">Category</label>
+        <select id="finderCategory"></select>
+      </div>
+      <div id="finderResults" class="scroll-list"></div>
+    </div>
+
+    <div id="recipesTabPanel" class="hidden">
+      <h3 class="section-subhead">Saved recipes</h3>
+      <div id="savedRecipesList" class="scroll-list"></div>
+
+      <h3 class="section-subhead">Build a new recipe</h3>
+      <div class="field">
+        <label for="recipeName">Recipe name</label>
+        <input type="text" id="recipeName" placeholder="e.g. Sunday breakfast">
+      </div>
+      <div class="field">
+        <label for="recipeServings">Servings this makes</label>
+        <input type="number" id="recipeServings" min="0.5" step="any" value="1">
+      </div>
+
+      <label for="recipeIngredientSearch">Add ingredient</label>
+      <div class="autocomplete">
+        <input type="text" id="recipeIngredientSearch" placeholder="Search an ingredient..." autocomplete="off">
+        <ul id="recipeIngredientSuggestions" class="suggestions hidden"></ul>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="recipeIngredientAmount">Amount</label>
+          <input type="number" id="recipeIngredientAmount" min="0" step="any" value="100">
+        </div>
+        <div class="field">
+          <label for="recipeIngredientUnit">Unit</label>
+          <select id="recipeIngredientUnit">
+            <option value="g">grams (g)</option>
+            <option value="oz">ounces (oz)</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" id="recipeAddIngredientBtn" class="btn-ghost">Add ingredient</button>
+
+      <div id="recipeIngredientList" class="scroll-list"></div>
+      <p class="modal-hint" id="recipeIngredientTotals"></p>
+
+      <button type="button" id="recipeSaveBtn" class="btn-primary">Save recipe</button>
+      <p class="modal-hint" id="recipeStatus"></p>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" id="closeDiscover" class="btn-ghost">Close</button>
+    </div>
   </div>
 </div>
 

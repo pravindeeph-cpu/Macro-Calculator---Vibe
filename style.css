@@ -326,3 +326,19 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .suggest-row { display: flex; margin-bottom: 2px; }
 .backup-actions { display: flex; flex-direction: column; gap: 10px; }
 .backup-actions .btn-primary, .backup-actions .btn-ghost { margin-top: 0; }
+
+/* --- Find food & recipes modal --- */
+.modal-card-wide { max-width: 560px; }
+.modal-card-wide #finderTabPanel,
+.modal-card-wide #recipesTabPanel {
+  display: flex; flex-direction: column; gap: 13px; margin-top: 14px;
+}
+.section-subhead { font-size: 0.85rem; font-weight: 700; margin: 4px 0 -4px; color: var(--ink); }
+.section-subhead:first-child { margin-top: 0; }
+.scroll-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 2px 10px;
+}
+.scroll-list .log-item { padding: 9px 0; }
+.finder-add-btn { padding: 6px 12px; font-size: 0.82rem; white-space: nowrap; }
+.finder-add-btn[disabled] { opacity: 0.55; cursor: default; }
