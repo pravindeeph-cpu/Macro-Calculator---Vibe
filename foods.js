@@ -235,4 +235,12 @@ const FOOD_DB = [
   { name: "Baba Ganoush", category: "Middle Eastern", cals: 130, protein: 3, carbs: 8, fat: 10, servings: [{ label: "1 serving (100g)", grams: 100 }] },
   { name: "Lamb Kebab", category: "Middle Eastern", cals: 230, protein: 21, carbs: 2, fat: 15, servings: [{ label: "1 serving (200g)", grams: 200 }] },
   { name: "Tabbouleh", category: "Middle Eastern", cals: 90, protein: 2, carbs: 11, fat: 4.5, servings: [{ label: "1 serving (150g)", grams: 150 }] },
+
+  // ---------------- Instant noodles ----------------
+  { name: "Maggi Curry Instant Noodles, cooked (packet)", category: "Instant Noodles", cals: 470, protein: 9, carbs: 65, fat: 18, servings: [{ label: "1 packet, cooked (79g)", grams: 79 }] },
+  { name: "Maggi Curry Instant Noodles (cup/pot)", category: "Instant Noodles", cals: 470, protein: 9, carbs: 65, fat: 18, servings: [{ label: "1 pot/cup (57g)", grams: 57 }] },
+  { name: "Maggi Tom Yam Instant Noodles, cooked (packet)", category: "Instant Noodles", cals: 460, protein: 9, carbs: 66, fat: 17, servings: [{ label: "1 packet, cooked (79g)", grams: 79 }] },
+  { name: "Indomie Mi Goreng, cooked (packet)", category: "Instant Noodles", cals: 480, protein: 9, carbs: 63, fat: 20, servings: [{ label: "1 packet, cooked (85g)", grams: 85 }] },
+  { name: "Koka Curry Instant Noodles, cooked (packet)", category: "Instant Noodles", cals: 460, protein: 9, carbs: 64, fat: 17, servings: [{ label: "1 packet, cooked (85g)", grams: 85 }] },
+  { name: "Samyang Hot Chicken Ramen, cooked (packet)", category: "Instant Noodles", cals: 380, protein: 7, carbs: 56, fat: 14, servings: [{ label: "1 packet, cooked (140g)", grams: 140 }] },
 ];
