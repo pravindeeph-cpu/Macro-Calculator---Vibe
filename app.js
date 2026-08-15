@@ -110,6 +110,14 @@
   const closeProfileBtn = document.getElementById("closeProfile");
   const profileForm = document.getElementById("profileForm");
 
+  const backupBtn = document.getElementById("backupBtn");
+  const backupModal = document.getElementById("backupModal");
+  const closeBackupBtn = document.getElementById("closeBackup");
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const importFile = document.getElementById("importFile");
+  const backupStatus = document.getElementById("backupStatus");
+
   const modeSearchBtn = document.getElementById("modeSearch");
   const modeCustomBtn = document.getElementById("modeCustom");
   const searchForm = document.getElementById("searchForm");
@@ -368,6 +376,79 @@
     });
     closeProfileModal();
     render();
+  });
+
+  // ---------- Backup & restore ----------
+  function openBackupModal() {
+    backupStatus.textContent = "";
+    backupModal.classList.remove("hidden");
+  }
+  function closeBackupModal() { backupModal.classList.add("hidden"); }
+  backupBtn.addEventListener("click", openBackupModal);
+  closeBackupBtn.addEventListener("click", closeBackupModal);
+  backupModal.addEventListener("click", (e) => { if (e.target === backupModal) closeBackupModal(); });
+
+  async function exportData() {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      logs: loadAllLogs(),
+      goals: loadGoals(),
+      profile: loadProfile(),
+      customFoods: loadCustomFoods(),
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const filename = `macro-calculator-backup-${todayStr()}.json`;
+
+    // Inside a sandboxed artifact preview, direct browser downloads are blocked —
+    // use the host-provided downloads capability instead when it's available.
+    if (typeof window.claude !== "undefined" && typeof window.claude.use === "function") {
+      try {
+        const downloads = await window.claude.use("downloads");
+        if (downloads) {
+          await downloads.save({ filename, data: json });
+          backupStatus.textContent = "Backup saved.";
+          return;
+        }
+      } catch (e) {
+        backupStatus.textContent = "Couldn't save a backup file here — try the standalone app instead.";
+        return;
+      }
+    }
+
+    // Normal browser tab (e.g. the standalone HTML file): a plain download works fine.
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    backupStatus.textContent = "Backup saved.";
+  }
+  exportBtn.addEventListener("click", exportData);
+
+  importBtn.addEventListener("click", () => importFile.click());
+  importFile.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    importFile.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const payload = JSON.parse(reader.result);
+        if (payload.logs) saveAllLogs(payload.logs);
+        if (payload.goals) saveGoals(payload.goals);
+        if ("profile" in payload) saveProfile(payload.profile);
+        if (payload.customFoods) saveCustomFoods(payload.customFoods);
+        render();
+        backupStatus.textContent = "Backup restored.";
+      } catch (err) {
+        backupStatus.textContent = "That file doesn't look like a valid backup.";
+      }
+    };
+    reader.readAsText(file);
   });
 
   // ---------- Goals modal ----------

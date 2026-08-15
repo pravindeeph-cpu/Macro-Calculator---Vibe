@@ -314,3 +314,5 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 .modal-actions .btn-primary { width: auto; }
 .modal-hint { font-size: 0.78rem; color: var(--muted); line-height: 1.5; margin: -4px 0 4px; }
 .suggest-row { display: flex; margin-bottom: 2px; }
+.backup-actions { display: flex; flex-direction: column; gap: 10px; }
+.backup-actions .btn-primary, .backup-actions .btn-ghost { margin-top: 0; }

@@ -21,6 +21,7 @@
       <button id="todayBtn" class="btn-ghost">Today</button>
     </div>
     <div class="topbar-actions">
+      <button id="backupBtn" class="btn-ghost">Backup</button>
       <button id="profileBtn" class="btn-ghost">Profile</button>
       <button id="goalsBtn" class="btn-ghost">Goals</button>
     </div>
@@ -262,6 +263,22 @@
         <button type="submit" class="btn-primary">Save profile</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div id="backupModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Backup &amp; restore</h2>
+    <p class="modal-hint">Your log, goals, and profile save automatically in this browser, but that storage isn't something to rely on long-term, especially in a shared preview. Export a backup file now and then, and import it to restore your data or move it to another browser or device.</p>
+    <div class="backup-actions">
+      <button type="button" id="exportBtn" class="btn-primary">Export backup (.json)</button>
+      <button type="button" id="importBtn" class="btn-ghost">Import backup</button>
+      <input type="file" id="importFile" accept="application/json" class="hidden">
+    </div>
+    <p class="modal-hint" id="backupStatus"></p>
+    <div class="modal-actions">
+      <button type="button" id="closeBackup" class="btn-ghost">Close</button>
+    </div>
   </div>
 </div>
 
