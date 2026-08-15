@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macro Calculator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <h1>Macro Calculator</h1>
+    <div class="date-nav">
+      <button id="prevDay" class="icon-btn" aria-label="Previous day">&larr;</button>
+      <input type="date" id="dateInput">
+      <button id="nextDay" class="icon-btn" aria-label="Next day">&rarr;</button>
+      <button id="todayBtn" class="btn-ghost">Today</button>
+    </div>
+    <button id="goalsBtn" class="btn-ghost">Goals</button>
+  </header>
+
+  <main class="layout">
+
+    <section class="panel add-panel">
+      <h2>Add an item</h2>
+
+      <div class="mode-toggle">
+        <button id="modeSearch" class="mode-btn active" type="button">From database</button>
+        <button id="modeCustom" class="mode-btn" type="button">Custom entry</button>
+      </div>
+
+      <form id="searchForm" class="add-form">
+        <label for="foodSearch">Food or drink</label>
+        <div class="autocomplete">
+          <input type="text" id="foodSearch" placeholder="Start typing e.g. chicken, banana, milk..." autocomplete="off">
+          <ul id="suggestions" class="suggestions hidden"></ul>
+        </div>
+        <input type="hidden" id="selectedFood">
+
+        <div class="row">
+          <div class="field">
+            <label for="qtyAmount">Amount</label>
+            <input type="number" id="qtyAmount" min="0" step="any" value="100">
+          </div>
+          <div class="field">
+            <label for="qtyUnit">Unit</label>
+            <select id="qtyUnit">
+              <option value="g">grams (g)</option>
+              <option value="oz">ounces (oz)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="preview" id="searchPreview"></div>
+
+        <div class="row">
+          <div class="field">
+            <label for="mealSelect">Meal</label>
+            <select id="mealSelect">
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option selected>Snack</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Add to log</button>
+      </form>
+
+      <form id="customForm" class="add-form hidden">
+        <label for="customName">Name</label>
+        <input type="text" id="customName" placeholder="e.g. Homemade smoothie" required>
+
+        <div class="row">
+          <div class="field">
+            <label for="customCals">Calories</label>
+            <input type="number" id="customCals" min="0" step="any" required>
+          </div>
+          <div class="field">
+            <label for="customProtein">Protein (g)</label>
+            <input type="number" id="customProtein" min="0" step="any" value="0">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="customCarbs">Carbs (g)</label>
+            <input type="number" id="customCarbs" min="0" step="any" value="0">
+          </div>
+          <div class="field">
+            <label for="customFat">Fat (g)</label>
+            <input type="number" id="customFat" min="0" step="any" value="0">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="mealSelectCustom">Meal</label>
+            <select id="mealSelectCustom">
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option selected>Snack</option>
+            </select>
+          </div>
+          <div class="field checkbox-field">
+            <label><input type="checkbox" id="saveToDb"> Save to database for reuse</label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Add to log</button>
+      </form>
+    </section>
+
+    <section class="panel summary-panel">
+      <h2>Today's totals</h2>
+      <div class="totals-grid" id="totalsGrid"></div>
+    </section>
+
+    <section class="panel log-panel">
+      <h2>Log</h2>
+      <div id="logContent"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="goalsModal" class="modal hidden">
+  <div class="modal-card">
+    <h2>Daily goals</h2>
+    <form id="goalsForm">
+      <div class="field">
+        <label for="goalCals">Calories</label>
+        <input type="number" id="goalCals" min="0" step="any">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="goalProtein">Protein (g)</label>
+          <input type="number" id="goalProtein" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="goalCarbs">Carbs (g)</label>
+          <input type="number" id="goalCarbs" min="0" step="any">
+        </div>
+        <div class="field">
+          <label for="goalFat">Fat (g)</label>
+          <input type="number" id="goalFat" min="0" step="any">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="closeGoals" class="btn-ghost">Cancel</button>
+        <button type="submit" class="btn-primary">Save goals</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="foods.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

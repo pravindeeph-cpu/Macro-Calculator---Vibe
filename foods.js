@@ -1,0 +1,81 @@
+// Built-in food/drink database. Macro values are per 100g (or 100ml for liquids).
+// cals = kcal, protein/carbs/fat = grams
+const FOOD_DB = [
+  // Proteins
+  { name: "Chicken breast, cooked", category: "Protein", cals: 165, protein: 31, carbs: 0, fat: 3.6 },
+  { name: "Chicken thigh, cooked", category: "Protein", cals: 209, protein: 26, carbs: 0, fat: 10.9 },
+  { name: "Ground beef, 85% lean, cooked", category: "Protein", cals: 250, protein: 26, carbs: 0, fat: 17 },
+  { name: "Salmon, cooked", category: "Protein", cals: 208, protein: 20, carbs: 0, fat: 13 },
+  { name: "Tuna, canned in water", category: "Protein", cals: 116, protein: 26, carbs: 0, fat: 1 },
+  { name: "Shrimp, cooked", category: "Protein", cals: 99, protein: 24, carbs: 0.2, fat: 0.3 },
+  { name: "Egg, whole", category: "Protein", cals: 155, protein: 13, carbs: 1.1, fat: 11 },
+  { name: "Egg white", category: "Protein", cals: 52, protein: 11, carbs: 0.7, fat: 0.2 },
+  { name: "Tofu, firm", category: "Protein", cals: 144, protein: 15.5, carbs: 3.9, fat: 8.7 },
+  { name: "Turkey breast, cooked", category: "Protein", cals: 135, protein: 30, carbs: 0, fat: 1 },
+  { name: "Pork chop, cooked", category: "Protein", cals: 231, protein: 25, carbs: 0, fat: 14 },
+  { name: "Bacon, cooked", category: "Protein", cals: 541, protein: 37, carbs: 1.4, fat: 42 },
+  { name: "Greek yogurt, plain, nonfat", category: "Dairy", cals: 59, protein: 10, carbs: 3.6, fat: 0.4 },
+  { name: "Cottage cheese, low-fat", category: "Dairy", cals: 72, protein: 12, carbs: 3, fat: 1 },
+  { name: "Whey protein powder", category: "Protein", cals: 380, protein: 80, carbs: 8, fat: 5 },
+
+  // Carbs / grains
+  { name: "White rice, cooked", category: "Grain", cals: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+  { name: "Brown rice, cooked", category: "Grain", cals: 123, protein: 2.7, carbs: 26, fat: 0.9 },
+  { name: "Quinoa, cooked", category: "Grain", cals: 120, protein: 4.4, carbs: 21, fat: 1.9 },
+  { name: "Oats, dry", category: "Grain", cals: 389, protein: 17, carbs: 66, fat: 7 },
+  { name: "Pasta, cooked", category: "Grain", cals: 131, protein: 5, carbs: 25, fat: 1.1 },
+  { name: "Bread, white", category: "Grain", cals: 265, protein: 9, carbs: 49, fat: 3.2 },
+  { name: "Bread, whole wheat", category: "Grain", cals: 247, protein: 13, carbs: 41, fat: 3.4 },
+  { name: "Potato, baked", category: "Vegetable", cals: 93, protein: 2.5, carbs: 21, fat: 0.1 },
+  { name: "Sweet potato, baked", category: "Vegetable", cals: 90, protein: 2, carbs: 21, fat: 0.1 },
+  { name: "Tortilla, flour", category: "Grain", cals: 312, protein: 8.2, carbs: 51, fat: 8 },
+  { name: "Bagel", category: "Grain", cals: 257, protein: 10, carbs: 50, fat: 1.5 },
+  { name: "Cereal, granola", category: "Grain", cals: 471, protein: 10, carbs: 64, fat: 20 },
+
+  // Fruit
+  { name: "Banana", category: "Fruit", cals: 89, protein: 1.1, carbs: 23, fat: 0.3 },
+  { name: "Apple", category: "Fruit", cals: 52, protein: 0.3, carbs: 14, fat: 0.2 },
+  { name: "Orange", category: "Fruit", cals: 47, protein: 0.9, carbs: 12, fat: 0.1 },
+  { name: "Strawberries", category: "Fruit", cals: 32, protein: 0.7, carbs: 7.7, fat: 0.3 },
+  { name: "Blueberries", category: "Fruit", cals: 57, protein: 0.7, carbs: 14, fat: 0.3 },
+  { name: "Grapes", category: "Fruit", cals: 69, protein: 0.7, carbs: 18, fat: 0.2 },
+  { name: "Avocado", category: "Fruit", cals: 160, protein: 2, carbs: 8.5, fat: 14.7 },
+  { name: "Mango", category: "Fruit", cals: 60, protein: 0.8, carbs: 15, fat: 0.4 },
+
+  // Vegetables
+  { name: "Broccoli, cooked", category: "Vegetable", cals: 35, protein: 2.4, carbs: 7.2, fat: 0.4 },
+  { name: "Spinach, raw", category: "Vegetable", cals: 23, protein: 2.9, carbs: 3.6, fat: 0.4 },
+  { name: "Carrot, raw", category: "Vegetable", cals: 41, protein: 0.9, carbs: 10, fat: 0.2 },
+  { name: "Mixed salad greens", category: "Vegetable", cals: 15, protein: 1.4, carbs: 2.9, fat: 0.2 },
+  { name: "Tomato", category: "Vegetable", cals: 18, protein: 0.9, carbs: 3.9, fat: 0.2 },
+  { name: "Green beans, cooked", category: "Vegetable", cals: 35, protein: 1.8, carbs: 8, fat: 0.1 },
+  { name: "Corn, cooked", category: "Vegetable", cals: 96, protein: 3.4, carbs: 21, fat: 1.5 },
+
+  // Nuts, fats, misc
+  { name: "Almonds", category: "Nuts/Fat", cals: 579, protein: 21, carbs: 22, fat: 50 },
+  { name: "Peanut butter", category: "Nuts/Fat", cals: 588, protein: 25, carbs: 20, fat: 50 },
+  { name: "Olive oil", category: "Nuts/Fat", cals: 884, protein: 0, carbs: 0, fat: 100 },
+  { name: "Butter", category: "Nuts/Fat", cals: 717, protein: 0.9, carbs: 0.1, fat: 81 },
+  { name: "Cheddar cheese", category: "Dairy", cals: 403, protein: 25, carbs: 1.3, fat: 33 },
+  { name: "Mozzarella cheese", category: "Dairy", cals: 280, protein: 28, carbs: 3.1, fat: 17 },
+  { name: "Hummus", category: "Nuts/Fat", cals: 166, protein: 8, carbs: 14, fat: 9.6 },
+  { name: "Dark chocolate", category: "Snack", cals: 546, protein: 4.9, carbs: 61, fat: 31 },
+  { name: "Potato chips", category: "Snack", cals: 536, protein: 7, carbs: 53, fat: 35 },
+  { name: "Pizza, cheese", category: "Prepared", cals: 266, protein: 11, carbs: 33, fat: 10 },
+  { name: "Hamburger, fast food", category: "Prepared", cals: 295, protein: 17, carbs: 25, fat: 14 },
+  { name: "French fries", category: "Prepared", cals: 312, protein: 3.4, carbs: 41, fat: 15 },
+  { name: "Ice cream, vanilla", category: "Snack", cals: 207, protein: 3.5, carbs: 24, fat: 11 },
+
+  // Drinks (per 100ml)
+  { name: "Whole milk", category: "Drink", cals: 61, protein: 3.2, carbs: 4.8, fat: 3.3 },
+  { name: "Skim milk", category: "Drink", cals: 34, protein: 3.4, carbs: 5, fat: 0.1 },
+  { name: "Orange juice", category: "Drink", cals: 45, protein: 0.7, carbs: 10.4, fat: 0.2 },
+  { name: "Soda, cola", category: "Drink", cals: 42, protein: 0, carbs: 10.6, fat: 0 },
+  { name: "Beer, regular", category: "Drink", cals: 43, protein: 0.5, carbs: 3.6, fat: 0 },
+  { name: "Wine, red", category: "Drink", cals: 85, protein: 0.1, carbs: 2.6, fat: 0 },
+  { name: "Black coffee", category: "Drink", cals: 1, protein: 0.1, carbs: 0, fat: 0 },
+  { name: "Coffee with milk & sugar", category: "Drink", cals: 30, protein: 1, carbs: 4, fat: 1 },
+  { name: "Protein shake (milk-based)", category: "Drink", cals: 90, protein: 8, carbs: 8, fat: 3 },
+  { name: "Sports drink (Gatorade-type)", category: "Drink", cals: 25, protein: 0, carbs: 6, fat: 0 },
+  { name: "Almond milk, unsweetened", category: "Drink", cals: 13, protein: 0.5, carbs: 0.6, fat: 1.1 },
+];
