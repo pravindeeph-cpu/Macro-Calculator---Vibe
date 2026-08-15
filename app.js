@@ -150,6 +150,11 @@
 
   const foodSearch = document.getElementById("foodSearch");
   const suggestionsEl = document.getElementById("suggestions");
+  const servingSizeField = document.getElementById("servingSizeField");
+  const servingSize = document.getElementById("servingSize");
+  const presetQtyRow = document.getElementById("presetQtyRow");
+  const presetQty = document.getElementById("presetQty");
+  const customAmountRow = document.getElementById("customAmountRow");
   const qtyAmount = document.getElementById("qtyAmount");
   const qtyUnit = document.getElementById("qtyUnit");
   const searchPreview = document.getElementById("searchPreview");
@@ -201,6 +206,7 @@
   foodSearch.addEventListener("input", () => {
     const q = foodSearch.value.trim().toLowerCase();
     selectedFood = null;
+    resetAmountUI();
     updateSearchPreview();
     if (!q) { hideSuggestions(); return; }
     const matches = allFoods()
@@ -262,21 +268,85 @@
   }
   function isDrink(food) { return food.category === "Drink"; }
 
+  function resetAmountUI() {
+    servingSizeField.classList.add("hidden");
+    presetQtyRow.classList.add("hidden");
+    customAmountRow.classList.add("hidden");
+    servingSize.innerHTML = "";
+  }
+
   function pickFood(food) {
     selectedFood = food;
     foodSearch.value = food.name;
     hideSuggestions();
+    populateServingUI(food);
     updateSearchPreview();
   }
+
+  // Builds the "Serving size" dropdown for a food's preset servings (if any), always
+  // ending in a "Custom amount" option that falls back to the raw grams/oz fields.
+  function populateServingUI(food) {
+    servingSize.innerHTML = "";
+    presetQty.value = 1;
+    qtyAmount.value = 100;
+    qtyUnit.value = "g";
+
+    if (food.servings && food.servings.length) {
+      food.servings.forEach((s, i) => {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = s.label;
+        servingSize.appendChild(opt);
+      });
+      const customOpt = document.createElement("option");
+      customOpt.value = "custom";
+      customOpt.textContent = "Custom amount";
+      servingSize.appendChild(customOpt);
+      servingSize.value = "0";
+      servingSizeField.classList.remove("hidden");
+      presetQtyRow.classList.remove("hidden");
+      customAmountRow.classList.add("hidden");
+    } else {
+      servingSizeField.classList.add("hidden");
+      presetQtyRow.classList.add("hidden");
+      customAmountRow.classList.remove("hidden");
+    }
+  }
+
+  servingSize.addEventListener("change", () => {
+    if (servingSize.value === "custom") {
+      presetQtyRow.classList.add("hidden");
+      customAmountRow.classList.remove("hidden");
+    } else {
+      presetQtyRow.classList.remove("hidden");
+      customAmountRow.classList.add("hidden");
+    }
+    updateSearchPreview();
+  });
 
   function amountInGrams() {
     const amt = parseFloat(qtyAmount.value) || 0;
     return qtyUnit.value === "oz" ? amt * OZ_TO_G : amt;
   }
 
+  // Resolves the current form state (preset serving × quantity, or a raw custom
+  // amount) into total grams plus a human-readable label for the log entry.
+  function resolveAmount() {
+    if (!selectedFood) return { grams: 0, qtyLabel: "" };
+    const usingPreset = selectedFood.servings && selectedFood.servings.length && servingSize.value !== "custom";
+    if (usingPreset) {
+      const preset = selectedFood.servings[parseInt(servingSize.value, 10)];
+      const qty = parseFloat(presetQty.value) || 0;
+      const grams = preset.grams * qty;
+      const qtyLabel = qty === 1 ? preset.label : `${trimNum(presetQty.value)} × ${preset.label}`;
+      return { grams, qtyLabel };
+    }
+    return { grams: amountInGrams(), qtyLabel: `${trimNum(qtyAmount.value)} ${qtyUnit.value}` };
+  }
+
   function updateSearchPreview() {
     if (!selectedFood) { searchPreview.textContent = ""; return; }
-    const grams = amountInGrams();
+    const { grams } = resolveAmount();
     const factor = grams / 100;
     const c = selectedFood.cals * factor;
     const p = selectedFood.protein * factor;
@@ -292,6 +362,7 @@
 
   qtyAmount.addEventListener("input", updateSearchPreview);
   qtyUnit.addEventListener("change", updateSearchPreview);
+  presetQty.addEventListener("input", updateSearchPreview);
 
   // ---------- Add item: search form ----------
   searchForm.addEventListener("submit", (e) => {
@@ -302,13 +373,13 @@
       setTimeout(() => (foodSearch.style.borderColor = ""), 1200);
       return;
     }
-    const grams = amountInGrams();
+    const { grams, qtyLabel } = resolveAmount();
     if (grams <= 0) return;
     const factor = grams / 100;
     addLogItem({
       name: selectedFood.name,
       meal: mealSelect.value,
-      qtyLabel: `${trimNum(qtyAmount.value)} ${qtyUnit.value}`,
+      qtyLabel,
       cals: selectedFood.cals * factor,
       protein: selectedFood.protein * factor,
       carbs: selectedFood.carbs * factor,
@@ -317,8 +388,7 @@
     });
     foodSearch.value = "";
     selectedFood = null;
-    qtyAmount.value = 100;
-    qtyUnit.value = "g";
+    resetAmountUI();
     updateSearchPreview();
     foodSearch.focus();
   });

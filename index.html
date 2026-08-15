@@ -48,7 +48,19 @@
           <ul id="suggestions" class="suggestions hidden"></ul>
         </div>
 
-        <div class="row">
+        <div class="field hidden" id="servingSizeField">
+          <label for="servingSize">Serving size</label>
+          <select id="servingSize"></select>
+        </div>
+
+        <div class="row hidden" id="presetQtyRow">
+          <div class="field">
+            <label for="presetQty">How many</label>
+            <input type="number" id="presetQty" min="0" step="any" value="1">
+          </div>
+        </div>
+
+        <div class="row hidden" id="customAmountRow">
           <div class="field">
             <label for="qtyAmount">Amount</label>
             <input type="number" id="qtyAmount" min="0" step="any" value="100">
